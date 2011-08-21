@@ -4,6 +4,14 @@ muttaliases.vim
 Auto complete Mutt aliases according to the file `~/.mutt/aliases`.
 This is especially useful for users who are editing Mutt mails via vim.
 
+Installation
+------------
+
+Put file `mutt-aliases.vim` into some place you're most comfortable with.
+Add the below line into your `~/.vimrc` file:
+
+    source <the-path-to-your-stored-mutt-aliases-vim-file>
+
 Usage
 -----
 
