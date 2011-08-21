@@ -26,3 +26,6 @@ function! CompleteMuttAliases(findstart, base)
         return result
     endif
 endfun
+
+" we only enable this auto complete function when editting Mutt mails
+autocmd BufRead,BufNewFile /tmp/mutt-* setlocal completefunc=CompleteMuttAliases
