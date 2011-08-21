@@ -16,9 +16,8 @@ function! CompleteMuttAliases(findstart, base)
             if words[0] == "alias" && len(words) >= 3
                 if words[1] =~ '^' . a:base
                     " get the alias part
-                    let alias = join(words[2:-1], ' ')
                     " mutt uses '\' to escape '"', we need to remove it!
-                    alias = substitue(alias, '\\', '', 'g')
+                    let alias = substitute(join(words[2:-1], ' '), '\\', '', 'g')
                     " add to the complete list
                     call add(result, alias)
                 endif
