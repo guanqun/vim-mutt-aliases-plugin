@@ -1,5 +1,5 @@
-muttaliases.vim
-===============
+mutt-aliases.vim
+================
 
 Auto complete Mutt aliases according to the file `~/.mutt/aliases`.
 This is especially useful for users who are editing Mutt mails via vim.
