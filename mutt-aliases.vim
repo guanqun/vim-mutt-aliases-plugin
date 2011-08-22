@@ -18,8 +18,12 @@ function! CompleteMuttAliases(findstart, base)
                     " get the alias part
                     " mutt uses '\' to escape '"', we need to remove it!
                     let alias = substitute(join(words[2:-1], ' '), '\\', '', 'g')
+                    let dict = {}
+                    let dict['word'] = alias
+                    let dict['abbr'] = words[1]
+                    let dict['menu'] = alias
                     " add to the complete list
-                    call add(result, alias)
+                    call add(result, dict)
                 endif
             endif
         endfor
