@@ -26,7 +26,10 @@ function! CompleteMuttAliases(findstart, base)
         if file == ""
             return result
         endif
-        for line_alias in readfile(expand(file))
+        if file[0] == '"'
+            let expanded_file = expand(file[1:-2])
+        endif
+        for line_alias in readfile(expanded_file)
             let words = split(line_alias, '\s')
             if words[0] == "alias" && len(words) >= 3
                 if words[1] =~ '^' . a:base
