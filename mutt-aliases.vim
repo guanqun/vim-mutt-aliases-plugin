@@ -1,3 +1,14 @@
+function! FindMuttAliasesFile()
+    let file = readfile(expand('~/.muttrc'))
+    for line in file
+        let words = split(line, '\s')
+        if len(words) >= 3 && words[0] == "set" && words[1] == "alias_file"
+            return words[2]
+        endif
+    endfor
+    return ""
+endfunction
+
 function! CompleteMuttAliases(findstart, base)
     if a:findstart
         " locate the start of the word
@@ -11,7 +22,11 @@ function! CompleteMuttAliases(findstart, base)
     else
         " find aliases matching with "a:base"
         let result = []
-        for line_alias in readfile(expand('~/.mutt/aliases'))
+        let file = FindMuttAliasesFile()
+        if file == ""
+            return result
+        endif
+        for line_alias in readfile(expand(file))
             let words = split(line_alias, '\s')
             if words[0] == "alias" && len(words) >= 3
                 if words[1] =~ '^' . a:base
@@ -29,7 +44,7 @@ function! CompleteMuttAliases(findstart, base)
         endfor
         return result
     endif
-endfun
+endfunction
 
 " we only enable this auto complete function when editting Mutt mails
 autocmd BufRead,BufNewFile /tmp/mutt-* setlocal completefunc=CompleteMuttAliases
