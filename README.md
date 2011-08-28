@@ -12,6 +12,9 @@ Add the below line into your `~/.vimrc` file:
 
     source <the-path-to-your-stored-mutt-aliases-vim-file>
 
+It should work out of box, though there's a simple assumption that your
+Mutt configuration is located at `~/.muttrc`.
+
 Usage
 -----
 
@@ -32,7 +35,7 @@ name.
     Subject: about mutt aliases plugin
     Reply-To: 
 
-Of course, I assume you have a record in your `~/.mutt/aliases`
+Of course, I assume you have a record in your alias file:
 
     alias foo My Foo <foo@bar.com>
 
