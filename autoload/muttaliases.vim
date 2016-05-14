@@ -1,37 +1,44 @@
-function! FindMuttAliasesFile()
+function! muttaliases#FindMuttAliasesFile() abort
     let file = readfile(expand('~/.muttrc'))
     for line in file
-        let words = split(line, '\s')
-        if len(words) >= 3 && words[0] == "set" && words[1] == "alias_file"
-            return words[2]
+        let alias_file = matchlist(line,'\v^\s*set\s+alias_file\s*\=\s*[''"]?([^''"]*)[''"]?$')
+        if !empty(alias_file)
+            return resolve(expand(alias_file[1]))
         endif
     endfor
-    return ""
+    return ''
 endfunction
 
-function! CompleteMuttAliases(findstart, base)
+function! muttaliases#EditMuttAliasesFile() abort
+    let file = muttaliases#FindMuttAliasesFile()
+    if empty(file)
+        echoerr 'No existing $alias_file in ~/.muttrc found!'
+    else
+        exe 'edit ' . escape(file, ' \%#|"')
+    endif
+endfunction
+
+function! muttaliases#CompleteMuttAliases(findstart, base) abort
     if a:findstart
         " locate the start of the word
         " we stop when we encounter space character
         let line = getline('.')
         let start = col('.') - 1
-        while start > 0 && line[start - 1] =~ '\a'
+        while start > 0 && line[start - 1] =~# '\a'
             let start -= 1
         endwhile
         return start
     else
         " find aliases matching with "a:base"
         let result = []
-        let file = FindMuttAliasesFile()
-        if file == ""
+        let file = muttaliases#FindMuttAliasesFile()
+        if empty(file)
+            echoerr 'No existing $alias_file in ~/.muttrc found!'
             return result
         endif
-        if file[0] == '"'
-            let expanded_file = expand(file[1:-2])
-        endif
-        for line_alias in readfile(expanded_file)
+        for line_alias in readfile(file)
             let words = split(line_alias, '\s')
-            if words[0] == "alias" && len(words) >= 3
+            if words[0] is# 'alias' && len(words) >= 3
                 if words[1] =~ '^' . a:base
                     " get the alias part
                     " mutt uses '\' to escape '"', we need to remove it!
@@ -49,5 +56,3 @@ function! CompleteMuttAliases(findstart, base)
     endif
 endfunction
 
-" we only enable this auto complete function when editting Mutt mails
-autocmd BufRead,BufNewFile /tmp/mutt-* setlocal completefunc=CompleteMuttAliases
