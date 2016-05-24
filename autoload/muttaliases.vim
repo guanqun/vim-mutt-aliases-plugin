@@ -14,7 +14,7 @@ function! muttaliases#EditMuttAliasesFile() abort
   if empty(file)
     echoerr 'No existing $alias_file in ~/.muttrc found!'
   else
-    exe 'edit ' . escape(file, ' \%#|"')
+    exe 'edit ' . escape(file, ' %#|"')
   endif
 endfunction
 
@@ -22,26 +22,28 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
   if a:findstart
     " locate the start of the word
     " we stop when we encounter space character
-    let line = getline('.')
-    let start = col('.') - 1
-    while start > 0 && line[start - 1] =~# '\a'
-      let start -= 1
-    endwhile
+    let col = col('.')-1
+    let text_before_cursor = getline('.')[0 : col - 1]
+    " let start = match(text_before_cursor, '\v<([[:digit:][:lower:][:upper:]]+[._%+-@]?)+$')
+    let start = match(text_before_cursor, '\v<\S+$')
     return start
   else
-    " find aliases matching with "a:base"
+    " find aliases matching with a:base
     let result = []
     let file = muttaliases#FindMuttAliasesFile()
     if empty(file)
       echoerr 'No existing $alias_file in ~/.muttrc found!'
       return result
     endif
-    for line_alias in readfile(file)
-      let words = split(line_alias, '\s')
+    let base_pattern = '^\V' . escape(a:base, '\')
+    for line in readfile(file)
+      " remove optional group parameters
+      let line = substitute(line, '\v(\s+-group\s+\S+)+', '','')
+      let words = split(line)
       if words[0] is# 'alias' && len(words) >= 3
-        if words[1] =~ '^' . a:base
+        if words[1] =~? base_pattern
           " get the alias part
-          " mutt uses '\' to escape '"', we need to remove it!
+          " mutt uses \ to escape ", we need to remove it!
           let alias = substitute(join(words[2:-1], ' '), '\\', '', 'g')
           let dict = {}
           let dict['word'] = alias
