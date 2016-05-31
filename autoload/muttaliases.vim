@@ -1,3 +1,7 @@
+if !exists('g:muttaliases_skip_regex')
+  let g:muttaliases_skip_regex = '\v^.*([0-9]{9,}|([0-9]+[a-z]+){4,}|not?[-_.]?reply|\+).*\@'
+endif
+
 function! muttaliases#FindMuttAliasesFile() abort
   let file = readfile(expand('~/.muttrc'))
   for line in file
@@ -7,15 +11,6 @@ function! muttaliases#FindMuttAliasesFile() abort
     endif
   endfor
   return ''
-endfunction
-
-function! muttaliases#EditMuttAliasesFile() abort
-  let file = muttaliases#FindMuttAliasesFile()
-  if empty(file)
-    echoerr 'No existing $alias_file in ~/.muttrc found!'
-  else
-    exe 'edit ' . escape(file, ' %#|"')
-  endif
 endfunction
 
 function! muttaliases#CompleteMuttAliases(findstart, base) abort
@@ -37,6 +32,9 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
     endif
     let base_pattern = '^\V' . escape(a:base, '\')
     for line in readfile(file)
+      if empty(line)
+        continue
+      endif
       " remove optional group parameters
       let line = substitute(line, '\v(\s+-group\s+\S+)+', '','')
       let words = split(line)
@@ -55,6 +53,15 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
       endif
     endfor
     return result
+  endif
+endfunction
+
+function! muttaliases#EditMuttAliasesFile() abort
+  let file = muttaliases#FindMuttAliasesFile()
+  if empty(file)
+    echoerr 'No existing $alias_file in ~/.muttrc found!'
+  else
+    exe 'edit ' . escape(file, ' %#|"')
   endif
 endfunction
 
@@ -78,7 +85,8 @@ function! muttaliases#AddMuttAliases() abort
     let match   = matchstrpos(line, address_pattern)
     let address = match[0]
     let start   = match[1]
-    while !empty(address)
+      " filter out common non-personal addresses
+    while !empty(address) && address !~? g:muttaliases_skip_regex
       call add(addresses, address)
       let start += len(address)
       let address = matchstr(line, address_pattern, start)
