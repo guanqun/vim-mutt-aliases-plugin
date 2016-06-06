@@ -1,7 +1,3 @@
-if !exists('g:muttaliases_skip_regex')
-  let g:muttaliases_skip_regex = '\v^.*([0-9]{9,}|([0-9]+[a-z]+){4,}|not?[-_.]?reply|\+).*\@'
-endif
-
 function! muttaliases#FindMuttAliasesFile() abort
   let file = readfile(expand('~/.muttrc'))
   for line in file
@@ -11,6 +7,15 @@ function! muttaliases#FindMuttAliasesFile() abort
     endif
   endfor
   return ''
+endfunction
+
+function! muttaliases#EditMuttAliasesFile() abort
+  let file = muttaliases#FindMuttAliasesFile()
+  if empty(file)
+    echoerr 'No existing $alias_file in ~/.muttrc found!'
+  else
+    exe 'edit ' . escape(file, ' %#|"')
+  endif
 endfunction
 
 function! muttaliases#CompleteMuttAliases(findstart, base) abort
@@ -54,6 +59,7 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
           " get the alias part
           " mutt uses \ to escape ", we need to remove it!
           let alias = substitute(join(words[2:-1], ' '), '\\', '', 'g')
+          let alias = substitute(alias, '\v([^\\])#.*$', '\1', '')
           let dict = {}
           let dict['word'] = alias
           let dict['abbr'] = words[1]
@@ -74,61 +80,3 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
   endif
 endfunction
 
-function! muttaliases#EditMuttAliasesFile() abort
-  let file = muttaliases#FindMuttAliasesFile()
-  if empty(file)
-    echoerr 'No existing $alias_file in ~/.muttrc found!'
-  else
-    exe 'edit ' . escape(file, ' %#|"')
-  endif
-endfunction
-
-" This function, which is to be run only on a Mutt email message,
-" finds all the addresses in the To, Cc, and Bcc headers. If
-" no aliases exist for these addresses then they are added to the
-" alias file. Needs 'set edit_headers' in ~/.muttrc !
-function! muttaliases#AddMuttAliases() abort
-  let aliasfile = muttaliases#FindMuttAliasesFile()
-
-  " Find all email addresses.
-  let addresses = []
-  let address_pattern = '\v<[[:alnum:]._%+-]+\@([[:alnum:]-]+\.)+[[:alpha:]]{2,}>'
-  let start = 1
-  let end = line('$')
-  let lines = getline(start, end)
-  for line in lines
-    if line !~# '^\v(To|Cc|Bcc):'
-      continue
-    endif
-    let match   = matchstrpos(line, address_pattern)
-    let address = match[0]
-    let start   = match[1]
-      " filter out common non-personal addresses
-    while !empty(address) && address !~? g:muttaliases_skip_regex
-      call add(addresses, address)
-      let start += len(address)
-      let address = matchstr(line, address_pattern, start)
-    endwhile
-  endfor
-
-  " Add
-  "
-  "   alias address address
-  "
-  " to the alias file for tab-completion in mutt.
-  let lines = readfile(aliasfile)
-  let is_aliased = 0
-  for address in addresses
-    let alias_pattern = '\V\^\s\*alias\s\+' . address . '\s\+'
-    for line in lines
-      if line =~? alias_pattern
-        let is_aliased = 1
-        break
-      endif
-    endfor
-    if !is_aliased
-      let aliasline = 'alias ' . address . ' ' . address
-      call writefile([aliasline], aliasfile, 'a')
-    endif
-  endfor
-endfunction
