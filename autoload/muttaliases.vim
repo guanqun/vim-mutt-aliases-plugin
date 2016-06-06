@@ -24,13 +24,24 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
     return start
   else
     " find aliases matching with a:base
-    let result = []
     let file = muttaliases#FindMuttAliasesFile()
     if empty(file)
       echoerr 'No existing $alias_file in ~/.muttrc found!'
       return result
     endif
-    let base_pattern = '^\V' . escape(a:base, '\')
+
+    let before = '\v^[^@]*'
+    let base   = '\V' . escape(a:base, '\')
+    let after  = '\v[^@]*($|\@)'
+
+    let pattern_begin = '\v^' . base . after
+    let pattern_delim = before . '\v<' . base . after
+    let pattern = before . base . after
+
+    let result_begin = []
+    let result_delim = []
+    let result = []
+
     for line in readfile(file)
       if empty(line)
         continue
@@ -39,7 +50,7 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
       let line = substitute(line, '\v(\s+-group\s+\S+)+', '','')
       let words = split(line)
       if words[0] is# 'alias' && len(words) >= 3
-        if words[1] =~? base_pattern
+        if words[1] =~? pattern
           " get the alias part
           " mutt uses \ to escape ", we need to remove it!
           let alias = substitute(join(words[2:-1], ' '), '\\', '', 'g')
@@ -48,10 +59,17 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
           let dict['abbr'] = words[1]
           let dict['menu'] = alias
           " add to the complete list
-          call add(result, dict)
+          if     dict.word =~? pattern_begin
+            call add(result_begin, dict)
+          elseif dict.word =~? pattern_delim
+            call add(result_delim, dict)
+          else
+            call add(result, dict)
+          endif
         endif
       endif
     endfor
+    let result = sort(result_begin, 1) + sort(result_delim, 1) + sort(result, 1)
     return result
   endif
 endfunction
