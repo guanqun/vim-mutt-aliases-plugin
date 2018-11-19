@@ -1,18 +1,26 @@
 function! muttaliases#FindMuttAliasesFile() abort
-  let file = readfile(expand('~/.muttrc'))
-  for line in file
-    let alias_file = matchlist(line,'\v^\s*set\s+alias_file\s*\=\s*[''"]?([^''"]*)[''"]?$')
-    if !empty(alias_file)
-      return resolve(expand(alias_file[1]))
-    endif
-  endfor
-  return ''
+  let aliases_file = ''
+
+  if exists('g:muttaliases_file')
+    let aliases_file = g:muttaliases_file
+  else
+    let muttrc_file = readfile(expand('~/.muttrc'))
+    for line in muttrc_file
+      let alias_file = matchlist(line,'\v^\s*set\s+alias_file\s*\=\s*[''"]?([^''"]*)[''"]?$')
+      if !empty(alias_file)
+        break
+      endif
+    endfor
+  endif
+
+  return fnamemodify(resolve(aliases_file), ':p')
 endfunction
 
 function! muttaliases#EditMuttAliasesFile() abort
   let file = muttaliases#FindMuttAliasesFile()
-  if empty(file)
-    echoerr 'No existing $alias_file in ~/.muttrc found!'
+  if !filereadable(file)
+    echoerr 'No existing $alias_file in ~/.muttrc found.'
+    echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
   else
     exe 'edit ' . escape(file, ' %#|"')
   endif
@@ -28,11 +36,12 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
     let start = match(text_before_cursor, '\v<\S+$')
     return start
   else
-    " find aliases matching with a:base
     let file = muttaliases#FindMuttAliasesFile()
-    if empty(file)
-      echoerr 'No existing $alias_file in ~/.muttrc found!'
-      return result
+
+    if !filereadable(file)
+      echoerr 'No existing $alias_file in ~/.muttrc found.'
+      echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
+      return []
     endif
 
     let before = '\v^[^@]*'
