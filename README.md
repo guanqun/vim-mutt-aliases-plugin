@@ -1,45 +1,55 @@
-mutt-aliases.vim
-================
+Complete `mutt` aliases (listed in `~/.mutt/aliases`) inside Vim;
+useful when using `Vim` as editor for `mutt`.
 
-Auto complete Mutt aliases according to the file `~/.mutt/aliases`.
-This is especially useful for users who are editing Mutt mails via vim.
+# Usage
 
-Installation
-------------
-
-Put file `mutt-aliases.vim` into some place you're most comfortable with.
-Add the below line into your `~/.vimrc` file:
-
-    source <the-path-to-your-stored-mutt-aliases-vim-file>
-
-It should work out of box, though there's a simple assumption that your
-Mutt configuration is located at `~/.muttrc`.
-
-Usage
------
-
-If you're editting file in Mutt:
-
+When you're editing a mail file in Vim that reads
+```
     From: Lu Guanqun <guanqun.lu@gmail.com>
     To: foo
-    Cc: 
-    Subject: about mutt aliases plugin
-    Reply-To: 
-
-And your cursor is just after `foo`, hit `Ctrl+X Ctrl+U` to get the full
-name.
-
+```
+and in your alias file have a record
+```
+    alias foo My Foo <foo@bar.com>
+```
+and your cursor is right after `foo`, then hit `Ctrl+X Ctrl+U` to obtain:
+```
     From: Lu Guanqun <guanqun.lu@gmail.com>
     To: My Foo <foo@bar.com>
-    Cc: 
-    Subject: about mutt aliases plugin
-    Reply-To: 
+```
+# Commands
 
-Of course, I assume you have a record in your alias file:
+The command `:EditAliases` opens the mutt aliases file in `Vim`.
+(For less typing, you can (command-line) alias it to `ea` by [vim-alias](https://github.com/Konfekt/vim-alias))
 
-    alias foo My Foo <foo@bar.com>
+To complete e-mail addresses inside Vim press `CTRL-X CTRL-U` in insert
+mode. See `:help i_CTRL-X_CTRL-U` and `:help compl-function`.
 
-License
--------
+# Setup
+
+The mutt aliases file is set by `$alias_file` in the file `~/.muttrc`. To
+explicitly set the path to a mutt aliases file `$file`, add to your `.vimrc` the line
+
+```vim
+  let g:muttaliases_file = '$file'
+```
+
+For example, `$file` could be
+
+```
+  ~/.mutt/aliases
+```
+
+# Related Plug-in
+
+The plugin https://github.com/Konfekt/vim-mailquery lets you complete e-mail
+addresses in Vim by those in your Inbox (or any other mail folder).
+
+# Credits
+
+Forked from [Lu Guanqun](mailto:guanqun.lu@gmail.com)'s [vim-mutt-aliases-plugin](https://github.com/guanqun/vim-mutt-aliases-plugin/tree/063a7bdd0d852a118253278721f74a053776135d).
+
+# License
 
 Distributable under the same terms as Vim itself.  See `:help license`.
+

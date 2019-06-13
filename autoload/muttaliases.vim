@@ -8,12 +8,13 @@ function! muttaliases#FindMuttAliasesFile() abort
       let alias_file = matchlist(line,'\v^\s*set\s+alias_file\s*\=\s*[''"]?([^''"]*)[''"]?$')
       if !empty(alias_file)
         let file = resolve(expand(alias_file[1]))
+        let g:muttaliases_file = file
       endif
     endfor
   endif
   if !filereadable(file)
-    echoerr 'No existing $alias_file in ~/.muttrc found.'
-    echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
+    echoerr 'No definition of $alias_file in ~/.muttrc found.'
+    echoerr 'Please set g:muttaliases_file in your vimrc to a mutt aliases file!'
     return ''
   else
     return file
