@@ -1,27 +1,28 @@
 function! muttaliases#FindMuttAliasesFile() abort
-  let aliases_file = ''
-
   if exists('g:muttaliases_file')
-    let aliases_file = g:muttaliases_file
+    let file = g:muttaliases_file
   else
-    let muttrc_file = readfile(expand('~/.muttrc'))
-    for line in muttrc_file
+    let file = readfile(expand('~/.muttrc'))
+
+    for line in file
       let alias_file = matchlist(line,'\v^\s*set\s+alias_file\s*\=\s*[''"]?([^''"]*)[''"]?$')
       if !empty(alias_file)
-        break
+        let file = resolve(expand(alias_file[1]))
       endif
     endfor
   endif
-
-  return fnamemodify(resolve(aliases_file), ':p')
+  if !filereadable(file)
+    echoerr 'No existing $alias_file in ~/.muttrc found.'
+    echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
+    return ''
+  else
+    return file
+  endif
 endfunction
 
 function! muttaliases#EditMuttAliasesFile() abort
   let file = muttaliases#FindMuttAliasesFile()
-  if !filereadable(file)
-    echoerr 'No existing $alias_file in ~/.muttrc found.'
-    echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
-  else
+  if !empty(file)
     exe 'edit ' . escape(file, ' %#|"')
   endif
 endfunction
@@ -38,9 +39,7 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
   else
     let file = muttaliases#FindMuttAliasesFile()
 
-    if !filereadable(file)
-      echoerr 'No existing $alias_file in ~/.muttrc found.'
-      echoerr 'Please set g:muttaliases_file to mutt aliases file in vimrc!'
+    if empty(file)
       return []
     endif
 
@@ -52,9 +51,9 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
     let pattern_delim = before . '\v<' . base . after
     let pattern = before . base . after
 
-    let result_begin = []
-    let result_delim = []
-    let result = []
+    let results_begin = []
+    let results_delim = []
+    let results = []
 
     for line in readfile(file)
       if empty(line)
@@ -75,17 +74,17 @@ function! muttaliases#CompleteMuttAliases(findstart, base) abort
           let dict['menu'] = alias
           " add to the complete list
           if     dict.word =~? pattern_begin
-            call add(result_begin, dict)
+            call add(results_begin, dict)
           elseif dict.word =~? pattern_delim
-            call add(result_delim, dict)
+            call add(results_delim, dict)
           else
-            call add(result, dict)
+            call add(results, dict)
           endif
         endif
       endif
     endfor
-    let result = sort(result_begin, 1) + sort(result_delim, 1) + sort(result, 1)
-    return result
+    let results = sort(results_begin, 1) + sort(results_delim, 1) + sort(results, 1)
+    return results
   endif
 endfunction
 
